@@ -6,6 +6,10 @@ public class AuthorParser {
   private String author_email = null;
   private String author_url = null;
 
+  public AuthorParser(){
+
+  }
+
   protected void setName(String newName) {
     this.author_name = newName;
   }

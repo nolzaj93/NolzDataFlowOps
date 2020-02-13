@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -38,32 +39,55 @@ public class Main {
     initializeDB();
 
     ArrayList<Book> books = new ArrayList<>();
+    String selectStmt = "SELECT * FROM book";
+
+    try {
+      stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(selectStmt);
+      rs.next();
+
+      while (rs.next()) {
+        Book book = new Book(rs.getString(1), rs.getString(5), rs.getString(3), rs.getString(2));
+        books.add(book);
+      }
+    } catch (SQLiteException ex) {
+      ex.printStackTrace();
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
 
     csvP.getFileRows().remove(0); //remove header
 
     List<String[]> csvRows = csvP.getFileRows();
+
     for (String[] bookInfo : csvRows) {
+      boolean isDuplicate = false;
+      for (Book book : books) {
+        if (bookInfo[0].equals(book.getIsbn())) {
+          isDuplicate = true;
+        }
+      }
 
+      if (!isDuplicate) {
+        try {
+          String insertStatement = "INSERT INTO book(isbn, book_title, author_name, publisher_name) VALUES(?,?,?,?) ";
+          String isbnNumber = bookInfo[0].replaceAll("\\D", "");
+          Book nextBook = new Book(isbnNumber, bookInfo[1], bookInfo[2], bookInfo[3]);
+          books.add(nextBook);
+          System.out.println(nextBook.toString());
 
+          PreparedStatement insertBook = conn.prepareStatement(insertStatement);
+          insertBook.setString(1, isbnNumber);
+          insertBook.setString(2, "\"" + bookInfo[1] + "\"");
+          insertBook.setString(3, "\"" + bookInfo[2] + "\"");
+          insertBook.setString(4, "\"" + bookInfo[3] + "\"");
+          insertBook.executeUpdate();
 
-      try {
-        String insertStatement = "INSERT INTO book(isbn, book_title, author_name, publisher_name) VALUES(?,?,?,?)";
-        String isbnNumber = bookInfo[0].replaceAll("\\D","");
-        Book nextBook = new Book(isbnNumber, bookInfo[1], bookInfo[2], bookInfo[3]);
-        books.add(nextBook);
-        System.out.println(nextBook.toString());
-
-        PreparedStatement insertBook = conn.prepareStatement(insertStatement);
-        insertBook.setString(1, isbnNumber);
-        insertBook.setString(2, "\""+bookInfo[1]+"\"");
-        insertBook.setString(3, "\""+bookInfo[2]+"\"");
-        insertBook.setString(4, "\""+bookInfo[3]+"\"");
-        insertBook.executeUpdate();
-
-      } catch (SQLiteException ex) {
-        ex.printStackTrace();
-      } catch (Exception ex) {
-        ex.printStackTrace();
+        } catch (SQLiteException ex) {
+          ex.printStackTrace();
+        } catch (Exception ex) {
+          ex.printStackTrace();
+        }
       }
     }
 
@@ -78,25 +102,56 @@ public class Main {
     JsonReader jread = new JsonReader(new FileReader("src/Data/authors.json"));
     AuthorParser[] authors = gson.fromJson(jread, AuthorParser[].class);
 
-    for (AuthorParser aParser : authors) {
-      try {
+    ArrayList<AuthorParser> dbAuthors = new ArrayList<>();
+    String selectAuthorStmt = "SELECT * FROM author";
 
-        String insertStatement = "INSERT INTO author(author_name, author_email, author_url) VALUES(?,?,?)";
+    try {
+      stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(selectAuthorStmt);
+      rs.next();
 
-        PreparedStatement insertAuthor = conn.prepareStatement(insertStatement);
-        insertAuthor.setString(1, aParser.getName());
-        insertAuthor.setString(2,aParser.getEmail());
-        insertAuthor.setString(3,aParser.getUrl());
+      while (rs.next()) {
 
-        insertAuthor.executeUpdate();
-
-      } catch (SQLiteException ex) {
-        ex.printStackTrace();
-      } catch (Exception ex) {
-        ex.printStackTrace();
+        AuthorParser author = new AuthorParser();
+        author.setName(rs.getString(1));
+        author.setEmail(rs.getString(2));
+        author.setUrl(rs.getString(3));
+        dbAuthors.add(author);
       }
+    } catch (SQLiteException ex) {
+      ex.printStackTrace();
+    } catch (Exception ex) {
+      ex.printStackTrace();
     }
 
+    for (AuthorParser aParser : authors) {
+      boolean isDuplicate = false;
+
+      for (AuthorParser author : dbAuthors) {
+        if (aParser.getName().equals(author.getName())) {
+          isDuplicate = true;
+        }
+      }
+
+      if (!isDuplicate) {
+        try {
+
+          String insertStatement = "INSERT INTO author(author_name, author_email, author_url) VALUES(?,?,?)";
+
+          PreparedStatement insertAuthor = conn.prepareStatement(insertStatement);
+          insertAuthor.setString(1, aParser.getName());
+          insertAuthor.setString(2, aParser.getEmail());
+          insertAuthor.setString(3, aParser.getUrl());
+
+          insertAuthor.executeUpdate();
+
+        } catch (SQLiteException ex) {
+          ex.printStackTrace();
+        } catch (Exception ex) {
+          ex.printStackTrace();
+        }
+      }
+    }
   }
 
   private static void initializeDB() {
