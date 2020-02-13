@@ -14,7 +14,7 @@ import java.util.List;
 
 public class CsvParser {
 
-  private List fileRows = new ArrayList();
+  private List<String []> fileRows = new ArrayList();
   /* List to hold all fields from the file
   As it is a csv of only strings, we could make it a String
   But it pretty common to have to handle multiple types
@@ -84,6 +84,14 @@ public class CsvParser {
       // may change this to throw an exception
     }
     return true;
+  }
+
+  public List<String []> getFileRows() {
+    return fileRows;
+  }
+
+  public void setFileRows(List fileRows) {
+    this.fileRows = fileRows;
   }
 }
 
