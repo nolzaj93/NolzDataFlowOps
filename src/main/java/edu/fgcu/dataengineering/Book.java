@@ -1,4 +1,4 @@
-package com.ajnolz8747fgcu;
+package edu.fgcu.dataengineering;
 
 public class Book {
 

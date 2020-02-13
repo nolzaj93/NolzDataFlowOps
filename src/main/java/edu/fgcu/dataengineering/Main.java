@@ -1,4 +1,4 @@
-package com.ajnolz8747fgcu;
+package edu.fgcu.dataengineering;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
@@ -10,9 +10,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.InputMismatchException;
 import java.util.List;
 import org.sqlite.SQLiteException;
 
@@ -33,20 +31,21 @@ public class Main {
   private static Statement stmt = null;
 
   public static void main(String[] args)
-      throws IOException, CsvValidationException, ParseException {
+      throws IOException, CsvValidationException {
 
-    // Reads and prints the contents of SEOExample.csv
     CsvParser csvP = new CsvParser("src/Data/bookstore_report2.csv");
 
     initializeDB();
 
     ArrayList<Book> books = new ArrayList<>();
 
-
     csvP.getFileRows().remove(0); //remove header
 
     List<String[]> csvRows = csvP.getFileRows();
     for (String[] bookInfo : csvRows) {
+
+
+
       try {
         String insertStatement = "INSERT INTO book(isbn, book_title, author_name, publisher_name) VALUES(?,?,?,?)";
         String isbnNumber = bookInfo[0].replaceAll("\\D","");
@@ -56,9 +55,9 @@ public class Main {
 
         PreparedStatement insertBook = conn.prepareStatement(insertStatement);
         insertBook.setString(1, isbnNumber);
-        insertBook.setString(2, bookInfo[1]);
-        insertBook.setString(3, bookInfo[2]);
-        insertBook.setString(4, bookInfo[3]);
+        insertBook.setString(2, "\""+bookInfo[1]+"\"");
+        insertBook.setString(3, "\""+bookInfo[2]+"\"");
+        insertBook.setString(4, "\""+bookInfo[3]+"\"");
         insertBook.executeUpdate();
 
       } catch (SQLiteException ex) {

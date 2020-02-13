@@ -1,10 +1,10 @@
-package com.ajnolz8747fgcu;
+package edu.fgcu.dataengineering;
 
 public class AuthorParser {
 
   private String author_name;
-  private String author_email;
-  private String author_url;
+  private String author_email = null;
+  private String author_url = null;
 
   protected void setName(String newName) {
     this.author_name = newName;
